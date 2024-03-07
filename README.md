@@ -54,16 +54,16 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 
 ### Optional properties
 
-| Property | Description |
-| --- | --- |
-| `of:button:$idx` | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.   |
-| `of:button:$idx:action` | Valid options are `post`, `post_redirect`, `mint`, and `link`. Default: `post` |
+| Property                | Description                                                                                                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- |
+| `of:button:$idx`        | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                          |
+| `of:button:$idx:action` | Valid options are `post`, `post_redirect`, `mint`, and `link`. Default: `post`                                                                                                                                                                                                     |
 | `of:button:$idx:target` | The target of the action. For post , post_redirect, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
-| `of:post_url` | The URL where the POST payload will be sent. Must be valid and start with `http://` or `https://` . Maximum 256 bytes. |
-| `of:input:text` | If this property is present, a text field should be added to the Frame. The contents of this field will be shown to the user as a label on the text field. Maximum 32 bytes. |
-| `of:image:aspect_ratio` | The aspect ratio of the image specified in the `of:image` field. Allowed values are `1.91:1` and `1:1`. Default: `1.91:1` |
-| `of:image:alt` | Alt text associated with the image for accessibility |
-| `of:state` | A state serialized to a string (for example via JSON.stringify()). Maximum 4096 bytes. Will be ignored if included on the initial frame ||     |
+| `of:post_url`           | The URL where the POST payload will be sent. Must be valid and start with `http://` or `https://` . Maximum 256 bytes.                                                                                                                                                             |
+| `of:input:text`         | If this property is present, a text field should be added to the Frame. The contents of this field will be shown to the user as a label on the text field. Maximum 32 bytes.                                                                                                       |
+| `of:image:aspect_ratio` | The aspect ratio of the image specified in the `of:image` field. Allowed values are `1.91:1` and `1:1`. Default: `1.91:1`                                                                                                                                                          |
+| `of:image:alt`          | Alt text associated with the image for accessibility                                                                                                                                                                                                                               |
+| `of:state`              | A state serialized to a string (for example via JSON.stringify()). Maximum 4096 bytes. Will be ignored if included on the initial frame                                                                                                                                            |     |     |
 
 ### Images
 
@@ -176,12 +176,96 @@ Lens Frames have two variations of `trustedData`, identified by a prefix. The fo
 
 The `messageBytes` field of `trustedData` must follow one of two formats:
 1.) `profile:$identityToken` - Where `$identityToken` is the Lens API identity token passed from client application to Frame server for the server to authenticate based on [these steps](#lens-api-identity-token)
-2.) `request:$messageBytes` - Where `$messageBytes` is the signed message from the Lens profile, a profile manager, or dispatcher address according to the EIP-712 typed data [signed message request](#signed-message-request)
+2.) `request:$type:$address:$messageBytes` - Where
+
+- `$type` is one of: `owner` (if signer is profile owner), `manager` (if signer is profile manager), or `dispatcher` (if signer is profile dispatcher)
+- `$address` is the address of the signer from `$type`
+- `$messageBytes` is the signed message from the Lens profile, profile manager, or dispatcher address according to the EIP-712 typed data [signed message request](#signed-message-request)
 
 ### Lens API Identity Token
 
-More details soon
+TODO: keep GraphQL explanations but start by providing abstractions in Lens SDK
+
+When authenticating with the Lens API, an `identityToken` will be returned which can be used to send with Frame requests to allow the Frame server to authenticate that a valid session exists for the corresponsing `profileId`. The `identityToken` is used in place of an `accessToken` so the Frame server only has read-only access to the verify the profile.
+
+```
+mutation Authenticate {
+  authenticate(request: {
+    id: "6e2ff9c2-3c9d-45c7-a990-7b7d23b989ba", # ChallengeId
+    signature: "0x8f82e1a2c2cc35a2963c60eeb0a76aecc100686c4ffcb98fd522a90cba2f0b2642067c79cd6d0c9d239ed28a6882818f77bf546e774410236c730988bd14de5d1c"
+  }) {
+    accessToken
+    refreshToken
+    identityToken
+  }
+}
+```
+
+A Frame server can validate an identity token as valid using the `verify` endpoint:
+
+```
+query Query {
+  verify(request: {
+    identityToken: "eyJhbGmiOiJ...",
+    for: "0x01,
+  })
+}
+```
 
 ### Signed Message Request
 
-More details soon
+TODO: keep TypedData + GraphQL explanations but start by providing abstractions in Lens SDK
+
+For additional verification on the Frame server, a signed message can be used to authenticate the contents of a Frame request. A message can signed from the profile owner, or an approved profile manager / dispatcher address.
+
+If a user has approved the Lens API as a dispatcher address, then Frame messages can be signed without requiring a manual signature by using the Lens API `frameDispatcherSignature` endpoint:
+
+```
+mutation FrameSignature {
+  frameDispatcherSignature(request: {
+    specVersion: "1.0.0"                                                   // string, version of Lens Frames spec
+    url: "https://mylensframe.xyz"                                         // string, The URL of the frame app
+    buttonIndex: 2                                                         // number, The index of the button that was clicked
+    profileId: "0x2a6b",                                                   // string, profile interacting with the frame
+    pubId: "0x2a6b-0x11-DA-bf2507ac"                                       // string, the publication which contained the frame URĽ
+    inputText: "Hello, World!"                                             // string, The text from the user input (if any)
+    state: "{\"counter\":1,\"idempotency_key\":\"431b8b38-eb4d-455b\"}"    // string, bytes value sent by frame server
+  }) {
+    signedMessage
+  }
+}
+```
+
+The signed message correspons to EIP-712 typed data that can be validated using the following signature scheme:
+
+```
+// EIP-712 domain
+const domain = {
+    name: 'Lens Frames',
+    version: '1.0.0',
+}
+
+// EIP-712 types
+const types = {
+    FrameData: [
+        { name: 'specVersion', type: 'string' },
+        { name: 'url', type: 'string' },
+        { name: 'buttonIndex', type: 'uint256' },
+        { name: 'profileId', type: 'string' },
+        { name: 'pubId', type: 'string' },
+        { name: 'inputText', type: 'string' },
+        { name: 'state', type: 'string' },
+    ],
+};
+
+// Data to sign, from frameDispatcherSignature endpoint request
+const sampleData = {
+    specVersion: '1.0.0',
+    url: 'https://mylensframe.xyz',
+    buttonIndex: 2,
+    profileId: '0x2a6b',
+    pubId: '0x2a6b-0x11-DA-bf2507ac',
+    inputText: 'Hello, World!',
+    state: '{"counter":1,"idempotency_key":"431b8b38-eb4d-455b"}',
+};
+```
