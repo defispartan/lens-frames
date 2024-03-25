@@ -2,7 +2,6 @@
 
 import { WelcomeToLens } from "@/components/WelcomeToLens";
 import FrameEmbed from "@/components/debug/FrameEmbed";
-import Image from "next/image";
 
 export default function Home({
   searchParams,
@@ -16,7 +15,7 @@ export default function Home({
           Lens Frames Client Demo
         </h1>
         <WelcomeToLens />
-        {/*   <FrameEmbed searchParams={searchParams} /> */}
+        <FrameEmbed searchParams={searchParams} />
       </div>
     </main>
   );

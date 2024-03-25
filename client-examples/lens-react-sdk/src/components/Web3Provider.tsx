@@ -44,11 +44,11 @@ const appConfigs = {
 };
 
 // select the config based on the environment
-const appConfig = appConfigs["development"]; // or appConfigs["production"]
+const appConfig = appConfigs["development"]; // "production" or "development"
 
 const wagmiConfig = createConfig(
   getDefaultConfig({
-    appName: "Lens SDK Next.js Starter App",
+    appName: "Lens Frames Client Demo",
     walletConnectProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
     ssr: true,
     ...appConfig.connectkit,
@@ -58,7 +58,7 @@ const wagmiConfig = createConfig(
 const queryClient = new QueryClient();
 
 const lensConfig: LensConfig = {
-  environment: development, // or production
+  environment: development, // development or production
   bindings: bindings(wagmiConfig),
   ...appConfig.lens,
 };
