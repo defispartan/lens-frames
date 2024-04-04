@@ -15,7 +15,7 @@ Frames are an extension of the [OpenGraph protocol](https://ogp.me/) that enable
 A frame is a session between a frontend and frame server. The frame server exposes visual elements and actions that are able to be interacted through a frontend that embeds the frame. Frames can represent a wide variety of applications including informational guides, games, Web3 transactions, image galleries, e-commerce, live data, and much more.
 
 <p align="center">
-  <img src="FrameSession.png" width="50%" />
+  <img src="FrameSession.png" width="100%" />
 </p>
 
 A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of a user. The [Open Frames standard](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables multiple authentication protocols to be supported within a single frame server.
@@ -40,11 +40,11 @@ The key features of Lens Frames are:
 
 // TODO
 
-## Setup
+### Setup
 
-## Signing
+### Signing
 
-## Verifying
+### Verifying
 
 </details>
 
@@ -53,14 +53,14 @@ The key features of Lens Frames are:
 
 // TODO
 
-## Setup
+### Setup
 
 @lens-protocol/client@2.0.0-alpha.37
 
 - **feat:** added Frames module - `client.frames.createFrameTypedData` - create Frame action typed data to be signed by user wallet - `client.frames.signFrameAction` - sign Frame action with Lens Manager if enabled - `client.frames.verifyFrameSignature` - verify Frame signature
 - **feat:** added support for Identity Token - `client.authentication.getIdentityToken` - retrieve Identity Token from authenticated LensClient - `client.authentication.verify({ identityToken })` - verify the token, notice new argument format
 
-## Signing
+### Signing
 
 ```
   const response = await lensClient.frames.signFrameAction({
@@ -75,7 +75,7 @@ The key features of Lens Frames are:
   })
 ```
 
-## Verifying
+### Verifying
 
 ```
   const response = await lensClient.frames.verifyFrameSignature({
@@ -92,7 +92,7 @@ The key features of Lens Frames are:
 
 Coming soon
 
-## Setup
+### Setup
 
 @lens-protocol/react-native@2.0.0-alpha.37
 @lens-protocol/react-web@2.0.0-alpha.37
@@ -100,9 +100,9 @@ Coming soon
 `useSignFrameAction`
 `useIdentityToken`
 
-## Signing
+### Signing
 
-## Verifying
+### Verifying
 
 </details>
 
@@ -288,6 +288,8 @@ The signed message corresponds to EIP-712 typed data that can be validated using
 
 <details>
 <summary>Frame Request EIP-712 Typed Data</summary>
+
+The typed data format format for signed frame requests is as follows:
 
 ```
 // EIP-712 domain
