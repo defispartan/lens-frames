@@ -1,7 +1,7 @@
 # Lens Protocol Frames
 
 - [Overview](#overview)
-- [Lens Frame Specification](#lens-frame-specification)
+- [Lens Frame Specification](#specification)
   - [Tags](#tags)
   - [Images](#images)
   - [Button Actions](#button-actions)
