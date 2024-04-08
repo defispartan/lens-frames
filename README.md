@@ -1,10 +1,15 @@
 # Lens Protocol Frames
 
 - [Overview](#overview)
-- [Developer Quickstart](#developer-quickstart)
 - [Lens Frame Specification](#lens-frame-specification)
+  - [Tags](#tags)
+  - [Images](#images)
+  - [Button Actions](#button-actions)
+  - [Frame Requests](#frame-requests)
+  - [Authentication](#authentication)
+- [Build Lens Frames](#build-lens-frames)
 - [Integrate Lens Frames](#integrate-lens-frames)
-- [Lens Publications as Frames / Open Actions](#lens-publications-as-frames--open-actions)
+- [Publications as Frames / Lens Protocol Actions](#publications-as-frames--lens-protocol-actions)
 - [Changelog](#changelog)
 - [Future Developments](#future-developments)
 
@@ -18,93 +23,18 @@ A frame is a session between a frontend and frame server. The frame server expos
   <img src="FrameSession.png" width="100%" />
 </p>
 
-A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of a user. The [Open Frames standard](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables multiple authentication protocols to be supported within a single frame server.
+A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of a user. [Open Frames](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables visual elements of frames to be shared between protocols.
 
-The Lens Frames specification is an implementation of the Open Frames standard that defines a set of tags and procedures to perform authenticated actions from a Lens Profile. The intention of Lens Frames is to create a unified set of features that frame and frontend developers can use to
+The Lens Frames specification is an implementation of Open Frames that defines a standard to create interactive applications that integrate Lens Protocol authentication and functionality.
 
-The key features of Lens Frames are:
+The highlights of the Lens Frames specification are:
 
-- Frame requests, responses, and authentication based on Lens Protocol primitives
-- Lens API and Lens SDK methods for seamless integrations
-- Publication metadata field to enable Lens Publications as frames
-  - Automatically show Lens publication as frame when it appears in feed
-  - Frames as a method to expose open actions contained in publication
-- Open actions as a method to verify transaction frames
-  - Smart contract intent of poster encoded into publication
-  - Applications can allowlist open action frames based on addresses
-
-# Developer Quickstart
-
-<details>
-<summary>Lens API</summary>
-
-// TODO
-
-### Setup
-
-### Signing
-
-### Verifying
-
-</details>
-
-<details>
-<summary>Lens Client JavaScript / TypeScript SDK</summary>
-
-// TODO
-
-### Setup
-
-@lens-protocol/client@2.0.0-alpha.37
-
-- **feat:** added Frames module - `client.frames.createFrameTypedData` - create Frame action typed data to be signed by user wallet - `client.frames.signFrameAction` - sign Frame action with Lens Manager if enabled - `client.frames.verifyFrameSignature` - verify Frame signature
-- **feat:** added support for Identity Token - `client.authentication.getIdentityToken` - retrieve Identity Token from authenticated LensClient - `client.authentication.verify({ identityToken })` - verify the token, notice new argument format
-
-### Signing
-
-```
-  const response = await lensClient.frames.signFrameAction({
-    actionResponse,
-    buttonIndex,
-    inputText,
-    profileId,
-    pubId,
-    specVersion, // string, must be 1.0.0
-    state,
-    url,
-  })
-```
-
-### Verifying
-
-```
-  const response = await lensClient.frames.verifyFrameSignature({
-    identityToken,
-    signature,
-    signedTypedData,
-  });
-```
-
-</details>
-
-<details>
-<summary>Lens React Hooks SDK</summary>
-
-Coming soon
-
-### Setup
-
-@lens-protocol/react-native@2.0.0-alpha.37
-@lens-protocol/react-web@2.0.0-alpha.37
-
-`useSignFrameAction`
-`useIdentityToken`
-
-### Signing
-
-### Verifying
-
-</details>
+- Frame request types and authentication based on Lens primitives
+- Implement tags and request types from Open Frames standard
+- Lens API and Lens SDK methods to perform signing and verification of requests
+- Publication metadata field to enable Lens publications as frames
+- Interactions with open action modules
+- Describe how open actions can be executed through transaction frames, and enhance the verifiability for apps
 
 # Specification
 
@@ -114,7 +44,7 @@ If a page contains all required frame properties, apps will render the page as a
 
 A frame app begins with an initial frame which is cached by apps and shown to users. A frame must have an image. It may have buttons, which when clicked load other frames or redirect the user to external websites.
 
-## Properties
+## Tags
 
 A frame property is a meta tag with a property and a content value.
 
@@ -144,6 +74,30 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 | `of:image:aspect_ratio`   | The aspect ratio of the image specified in the `of:image` field. Allowed values are `1.91:1` and `1:1`. Default: `1.91:1`                                                                                                                                                              |
 | `of:image:alt`            | Alt text associated with the image for accessibility                                                                                                                                                                                                                                   |
 | `of:state`                | A state serialized to a string (for example via JSON.stringify()). Maximum 4096 bytes. Will be ignored if included on the initial frame                                                                                                                                                |
+| `of:authenticated`        | Boolean value specifying whether Frame server is requesting an authenticated response. Allowed values are `true` or `false`. Default: `true`                                                                                                                                           |
+
+## Images
+
+There are a few rules for serving images in `of:image` tags:
+
+- The size of the image must be < 10 MB.
+- The type of image must be jpg, png or gif.
+- The image source must either be an external resource with content headers or a data URI.
+
+Clients may resize larger images or crop those that do not fit in their aspect ratio. SVG images are not because they can contain scripts and extra work must be done by clients to sanitize them.
+
+When a frame server receives a POST request:
+
+- It must respond within 5 seconds.
+- It must respond with a 200 OK and another frame, on a post button click.
+- It must respond with a 302 OK and a Location header, on a post_redirect button click.
+- Any Location header provided must contain a URL that starts with http:// or https://.
+
+Frame servers can use cache headers to refresh images and offer more dynamic first frame experiences:
+
+Frame servers can use the max-age directive in the HTTP Cache-Control header to ensure images in the initial frame refresh automatically. A lower max-age ensures images update regularly without user interactions. App developers should respect cache headers set by the original frame image, and their image proxy implementations should not interfere with durations.
+
+It is recommended to add timestamps or UUIDs to image urls on subsequent frames to bust caches, and return a frame with a "refresh" button if it is expected that a frame response could take > 5 seconds.
 
 ## Button actions
 
@@ -175,7 +129,7 @@ The target property must be a valid [CAIP-10](https://github.com/ChainAgnostic/C
 
 The `tx` action allows a frame to send a transaction request to the user's connected wallet. Unlike other action types, tx actions have multiple steps.
 
-First, the client makes a POST request to the `target` URL to fetch data about the transaction. The frame server receives a signed frame action payload in the POST body, including the address of the connected wallet in the `address` field. The frame server must respond with a `200 OK` and a JSON response describing the transaction which satisfies the following type:
+First, the client makes a POST request to the `target` URL to fetch data about the transaction. The frame server receives a signed frame action payload in the POST body, which includes the `profileId` and optional `signer` field that can be verified using the [authentication](#authentication) steps. The frame server must respond with a `200 OK` and a JSON response describing the transaction which satisfies the following type:
 
 ```ts
 type TransactionTargetResponse {
@@ -218,84 +172,51 @@ Example:
 };
 ```
 
-The client then sends a transaction request to the user's connected wallet. The wallet should prompt the user to sign the transaction and broadcast it to the network. The client should then send a POST request to the `post_url` with a signed frame action payload including the transaction hash in the `transactionId` field to which the frame server should respond with a `200 OK` and another frame.
+The client then sends a transaction request to the user's connected wallet, or uses the calldata to generate a signed or dispatched action for Lens protocol actions following instructions [here](#lens-publications-as-frames--open-actions). The client should then send a POST request to the `post_url` with a signed frame action payload including the transaction hash in the `actioNResponse` field to which the frame server should respond with a `200 OK` and another frame.
 
-### Images
+## Frame Requests
 
-There are a few rules for serving images in `of:frame:image` tags:
-
-- The size of the image must be < 10 MB.
-- The type of image must be jpg, png or gif.
-- The image source must either be an external resource with content headers or a data URI.
-
-Clients may resize larger images or crop those that do not fit in their aspect ratio. SVG images are not because they can contain scripts and extra work must be done by clients to sanitize them.
-
-When a frame server receives a POST request:
-
-- It must respond within 5 seconds.
-- It must respond with a 200 OK and another frame, on a post button click.
-- It must respond with a 302 OK and a Location header, on a post_redirect button click.
-- Any Location header provided must contain a URL that starts with http:// or https://.
-
-Best Practices:
-
-- Add timestamps or UUIDs to image urls on subsequent frames to bust caches.
-- Return a frame with a "refresh" button if your response takes > 5 seconds.
-- Sanitize all input received from the user via text inputs.
-- If needed, validate request data according to [Lens Frame Authentication](#lens-frame-authentication)
-
-### Frame Requests
-
-When a user clicks a button on a frame, the frame receives a POST request with a payload containing both `untrustedData` and `trustedData`. The `untrustedData` contains the raw request payload. The `trustedData` contains authentication details that a frame can use to verify the action and/or identity performing the frame action.
-
-The schema for Lens frame requests is as follows:
+When a user clicks a button on a frame, the frame receives a POST request with the payload format below. The payload contains `untrustedData`, containing details of the action taken, and `trustedData`, an EIP-712 signed message from a profile owner or delegated executor used to verify the authenticity of `untrustedData`.
 
 ```
 {
   clientProtocol: "lens",               // string, authentication protocol that frame server will verify
   untrustedData: {
     profileId: "0x123",                 // string, Lens profile ID performing the action
-    pubId: "0x123-0x1",                 // string, Lens publication ID, profile ID + profile publication index
+    pubId: "0x123-0x1",                 // string, Lens publication ID being interacted with, poster profile ID + publication index
     url: "https://example.com",         // string, the URL of the Frame that was clicked. May be different from the URL that the data was posted to.
     unixTimestamp: 123456789,           // number, Unix timestamp in milliseconds
     buttonIndex: 1,                     // number, the button that was clicked
-    inputText?: "Hello, World!",        // string, input text for the Frame's text input, if present. Undefined if no text input field is present
-    state?: "%7B%22counter%22%3A1%7D"   // string, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
+    inputText?: "Hello, World!",        // string, optional, input text for the Frame's text input, if present. Undefined if no text input field is present
+    deadling?: 123456789,               // number, optional, unix timestamp of signature expiration
+    state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
+    actionResponse?: "0x"               // string, optional, transaction hash, if executed through tx button
   },
   trustedData: {
-    messageBytes: "",                   // string, EIP-712 signed message of request payload or blank string if no action authentication
-    identityToken?: "",                 // string, identity token issued by Lens API to verify user identity and/or perform verification with Lens API from frame server
-    signerType?: "",                    // string, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
-    signer?: "",                        // string, address used to sign type data from messageBytes
+    messageBytes: "",                   // string, EIP-712 signed message of request payload or blank string if action is not authenticated
+    identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
+    signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
+    signer?: "",                        // string, optional, address used to sign type data from messageBytes
   }
 }
 ```
 
-### Authentication
+## Authentication
 
-TODO - Describe role of typed data vs identity token and how they relate to Lens profiles and delegated executors
-TODO - Detailed explanation of frame request scheme, how to generate and verify
-TODO - Document Lens API, Client SDK, and React SDK methods to generate, sign, and verify typed data
+When a frame server receives a [request](#frame-requests), the server is able to verify that the contents of `untrustedData` are authorized by the associated Lens `profileId` using the steps described here.
 
-Authentication of Lens frame requests is performed by the frame server.
-
-messageBytes: "", // string, EIP-712 signed message of request payload or blank string if no action authentication
-identityToken?: "", // string, identity token issued by Lens API to verify user identity and/or perform verification with Lens API from frame server
-signerType?: "", // string, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
-signer?: "", // string, address used to sign type data from messageBytes
-
-The signed message corresponds to EIP-712 typed data that can be validated using the following signature scheme:
+A Lens Profile is an NFT with one owner address and any number of delegated executors, addresses with the ability to execute actions on a profile's behalf. Lens frame authentication is based on verifying EIP-712 signed typed data from a profile owner or delegated executor.
 
 <details>
 <summary>Frame Request EIP-712 Typed Data</summary>
-
-The typed data format format for signed frame requests is as follows:
 
 ```
 // EIP-712 domain
 const domain = {
     name: 'Lens Frames',
     version: '1.0.0',
+    chainId: 137,
+    verifyingContract": '0x0000000000000000000000000000000000000000'
 }
 
 // EIP-712 types
@@ -308,6 +229,8 @@ const types = {
         { name: 'pubId', type: 'string' },
         { name: 'inputText', type: 'string' },
         { name: 'state', type: 'string' },
+        { name: 'actionResponse', type: 'string' },
+        { name: 'deadline', type: 'uint256' },
     ],
 };
 
@@ -320,18 +243,167 @@ const sampleData = {
     pubId: '0x2a6b-0x11-DA-bf2507ac',
     inputText: 'Hello, World!',
     state: '{"counter":1,"idempotency_key":"431b8b38-eb4d-455b"}',
+    actionResponse: "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    deadline: 123456789,
 };
 ```
 
+Any address that has signless interactions enabled has approved the Lens API as a delegated executor, this is recommended as the default form of authentication to enable frame interactions without manual signatures. The end-to-end process of authenticating a frame request is as follows:
+
+1.) Lens application requests a frame signature from Lens API OR the currently connected address if profile does not have signless actions enabled on Lens API. Methods for constructing and signing typed data are detailed in [integration section](#integrate-lens-frames).
+
+2.) Lens application sends POST [request](#frame-requests) to frame server with `trustedData` fields populated based on (1).
+
+3.) Frame server verifies signature by constructing typed from frame request and validating that message is signed by profile owner or delegated executor. Methods for constructing and verifying typed data are detailed in [building section](#build-lens-frames).
+
+</details>
+
+# Build Lens Frames
+
+A minimum viable frame consists of a web server serving tags from the [Lens specification](#tags). When a frame server receives a request to the `post_url` or `url` (depending on which is specificed), it can: perform authentication, perform background actions, update frame state.
+
+A frame can authenticate the Lens profile id that originated a request, the address that signed the request (profile owner or delegated executor), and that the content of the request matches what the profile signed. It can do so utilizing the `trustedData` fields as described in [authentication](#authentication).
+
+The following sections detail how frame servers can utilize various methods to authenticate a Frame request:
+
 <details>
+<summary>Lens Client SDK</summary>
 
-### Lens API Identity Token
+NodeJS script to create and verify typed data from Lens Client SDK based on `untrustedData` and `trustedData` inputs from frame request. Install library with preferred package manager:
 
-TODO - Description + Lens API, Client SDK, and React SDK implementations
+```
+yarn install @lens-protocol/client@alpha
+```
+
+```
+const { LensClient, production } = require("@lens-protocol/client");
+
+const lensClientConfig = {
+  environment: production,
+};
+
+const lensClient = new LensClient(lensClientConfig);
+
+lensClient.frames
+  .createFrameTypedData({
+    ...req.body.untrustedData // Frame server request, untrustedData
+  })
+  .then((response) => {
+    lensClient.frames
+      .verifyFrameSignature({
+        identityToken: req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+        signature: req.body.trustedData.messageBytes, // Frame server request, trustedData.messageBytes,
+        signedTypedData: response,
+      })
+      .then((verification) => {
+        if(verification === FrameVerifySignatureResult.Verified){
+          console.log("Frame request verified")
+        } else {
+          console.log(`Frame request unverified: ${verification}`)
+        }
+      });
+  });
+```
+
+</details>
+
+<details>
+<summary>Lens API</summary>
+
+Production endpoint: https://api-v2.lens.dev
+
+NodeJS script to create and verify typed data from Lens API based on `untrustedData` and `trustedData` inputs from frame request. No libraries required, example uses built-in `fetch` method.
+
+```
+const createTypedDataQuery = `
+  query CreateFrameTypedData($request: FrameEIP712Request!) {
+    result: createFrameTypedData(request: $request) {
+        types {
+            FrameData {
+              name
+              type
+            }
+        }
+        domain {
+            name
+            chainId
+            version
+            verifyingContract
+        }
+        value {
+            specVersion
+            url
+            buttonIndex
+            profileId
+            pubId
+            inputText
+            state
+            actionResponse
+            deadline
+        }
+    }
+  }
+`;
+
+const createTypedDataVariables = req.body.untrustedData; // Frame server request, untrustedData
+
+const createTypedDataOptions = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    query: createTypedDataQuery,
+    variables: createTypedDataVariables,
+  }),
+};
+
+fetch("https://api-v2.lens.dev", createTypedDataOptions)
+  .then((response) => response.json())
+  .then((typedData) => {
+    console.log(JSON.stringify(typedData.data.result, null, 2));
+    const verifyQuery = `
+    query VerifyFrameSignature($request: FrameVerifySignature!) {
+      result: verifyFrameSignature(request: $request)
+    }
+  `;
+
+    const verifyVariables = {
+      request: {
+        identityToken:
+         req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+        signature:
+          req.bodt.trustedData.messageBytes, // Frame server request, trustedData.messageBytes
+        signedTypedData: typedData.data.result,
+      },
+    };
+
+    const verifyOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: verifyQuery,
+        variables: verifyVariables,
+      }),
+    };
+
+    fetch("https://api-v2.lens.dev", verifyOptions)
+      .then((response) => response.json())
+      .then((data) => console.log(JSON.stringify(data, null, 2)))
+      .catch((error) => console.error("verifyFrameSignature Error:", error));
+  })
+  .catch((error) => console.error("createTypedData Error:", error));
+```
+
+</details>
+
+Authentication may be abstracted by utilizing a frame library that supports Lens frame authentication. Instructions will be linked here once support is added for popular libraries: frames.js (in progress), onchainkit, and frog.
 
 # Integrate Lens Frames
 
-A Client Application is where Frames are rendered. A publication containing Frame tags has elements rendered based on the Frame specification and individual tags/values of the Frame instance.
+A client Application is where Frames are rendered. A publication containing Frame tags has elements rendered based on the Frame specification and individual tags/values of the Frame instance.
 
 When a user clicks a button on a frame, the app makes a POST request to the frame server. The server must respond with a new frame that is sent back to the user.
 
@@ -354,7 +426,7 @@ Apps may render frames any time they are showing a Lens Publication to a viewer.
 2. Buttons may be displayed in multiple rows if space is a constraint.
 3. Text inputs must be displayed above the buttons and below the image.
 4. Text input labels must be shown above or inside the text input.
-5. Apps must respect the aspect ratio set in the `of:frame:image:aspect_ratio` property.
+5. Apps must respect the aspect ratio set in the `of:image:aspect_ratio` property.
 
 If the button is a `post_redirect` or `link` action:
 
@@ -373,8 +445,8 @@ If the button is a `tx` action, validation should be performed at the discretion
 If the button clicked is a `post` or `post_redirect`, apps must:
 
 1. Construct a [Lens Frame Request](#lens-frame-request).
-2. POST the packet to `of:frame:button:$idx:target` if present
-3. POST the packet to `of:frame:post_url` if target was not present.
+2. POST the packet to `of:button:$idx:target` if present
+3. POST the packet to `of:post_url` if target was not present.
 4. POST the packet to or the frame's embed URL if neither target nor action were present.
 5. Wait at least 5 seconds for a response from the frame server.
 
@@ -398,23 +470,326 @@ Applications will receive responses from frame servers after a POST request is s
 4. If handling a 30X response, apps must ensure the url starts with `http://` or `https://`.
 5. If handling a 30X response, warn the user before directing them to an untrusted site.
 
+### Signing Frame Requests
+
+A frame can authenticate the Lens profile id that originated a request, the address that signed the request (profile owner or delegated executor), and that the content of the request matches what the profile signed. It can do so utilizing the `trustedData` fields as described in [authentication](#authentication).
+
+The following sections detail how frame servers can utilize various methods to authenticate a Frame request:
+
+<details>
+<summary>Lens Client SDK</summary>
+
+The process for signing frame requests depends on whether the profile has Lens API signless interactions enabled. To check if signless is enabled:
+
+<details>
+<summary>Signless Enabled</summary>
+
+NodeJs script using Lens Client SDK to query whether profile has Lens API signless interactions enabled.
+
+```
+const { LensClient, production } = require("@lens-protocol/client");
+
+const lensClientConfig = {
+  environment: production,
+};
+
+const lensClient = new LensClient(lensClientConfig);
+
+lensClient.profile
+  .fetch({ forProfileId: "0x2a6b" }) // insert profileId here
+  .then((response) => console.log(response.signless));
+```
+
+</details>
+
+If signless is enabled, then the Lens API can sign frame requests on behalf of a user. The SDK method documented below can be used to generated a frame request signature.
+
+<details>
+<summary>Sign Frame Request</summary>
+
+NodeJs script using Lens Client SDK to generate frame request signature. Note: requires profile to be logged into API session, [login details](https://docs.lens.xyz/docs/login).
+
+```
+const { LensClient, production } = require("@lens-protocol/client");
+
+const lensClientConfig = {
+  environment: production,
+};
+
+const lensClient = new LensClient(lensClientConfig);
+
+// parameters populated based on frame request
+lensClient.frames
+  .signFrameAction({
+    actionResponse:
+      "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    buttonIndex: 1,
+    inputText: "Some input text",
+    profileId: "0x2a6b",
+    pubId: "0x2a6b-0x27-DA-0587635a",
+    specVersion: "1.0.0",
+    state: "Some state",
+    url: "https://example.com",
+  })
+  .then((response) => console.log(JSON.stringify(response, null, 2)));
+```
+
+</details>
+
+If signless is not enabled for a profile then a frame request must be manually signed by the profile owner or a delegated manager. An application can either choose to disable frame interactions if this is the case, or generate and request that a user sign each frame using `signTypedData` wallet method. The following method can be used to generate typed to sign based on the frame request.
+
+<details>
+<summary>Create Typed Data</summary>
+
+NodeJs script using Lens Client SDK to generate typed data to sign for frame request.
+
+```
+const { LensClient, production } = require("@lens-protocol/client");
+
+const lensClientConfig = {
+  environment: production,
+};
+
+const lensClient = new LensClient(lensClientConfig);
+
+// parameters populated based on frame request
+lensClient.frames
+  .createFrameTypedData({
+    actionResponse:
+      "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    buttonIndex: 1,
+    deadline: Math.floor(Date.now() / 1000) + 3600,
+    inputText: "Some input text",
+    profileId: "0x2a6b",
+    pubId: "0x2a6b-0x27-DA-0587635a",
+    specVersion: "1.0.0",
+    state: "Some state",
+    url: "https://example.com",
+  })
+  .then((response) => console.log(JSON.stringify(response, null, 2)));
+
+```
+
+</details>
+
+</details>
+
+<details>
+<summary>Lens API</summary>
+
+Production endpoint: https://api-v2.lens.dev
+
+The process for signing frame requests depends on whether the profile has Lens API signless interactions enabled. To check if signless is enabled:
+
+<details>
+<summary>Signless Enabled</summary>
+
+NodeJs script using Lens API to query whether profile has Lens API signless interactions enabled.
+
+```
+const createTypedDataQuery = `
+  query Profile($request: ProfileRequest!) {
+    result: profile(request: $request) {
+        signless
+    }
+  }
+`;
+
+const createTypedDataVariables = {
+  request: {
+    forProfileId: "0x2a6b", // insert profileId here
+  },
+};
+
+const createTypedDataOptions = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    query: createTypedDataQuery,
+    variables: createTypedDataVariables,
+  }),
+};
+
+fetch("https://api-v2.lens.dev", createTypedDataOptions)
+  .then((response) => response.json())
+  .then((data) => console.log(JSON.stringify(data, null, 2)))
+  .catch((error) => console.error("Error:", error));
+```
+
+</details>
+
+If signless is enabled, then the Lens API can sign frame requests on behalf of a user using the endpoint documented below.
+
+<details>
+<summary>Sign Frame Request</summary>
+
+NodeJs script using Lens API to generate signature for frame request. Note: requires profile to be logged into API session using ACCESS_TOKEN, [login details](https://docs.lens.xyz/docs/login).
+
+```
+const signQuery = `
+  mutation SignFrameAction($request: FrameLensManagerEIP712Request!) {
+    result: signFrameAction(request: $request) {
+        signature
+        signedTypedData{
+            types {
+                FrameData {
+                  name
+                  type
+                }
+            }
+            domain {
+                name
+                chainId
+                version
+                verifyingContract
+            }
+            value {
+                specVersion
+                url
+                buttonIndex
+                profileId
+                pubId
+                inputText
+                state
+                actionResponse
+                deadline
+            }
+        }
+    }
+  }
+`;
+
+// populated based on frame interaction
+const signVariables = {
+  request: {
+    actionResponse:
+      "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    buttonIndex: 1,
+    inputText: "Some input text",
+    profileId: "0x02c747",
+    pubId: "0x2a6b-0x27-DA-0587635a",
+    specVersion: "1.0.0",
+    state: "Some state",
+    url: "https://example.com",
+  },
+};
+
+const signOptions = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization:
+      "Bearer INSERT_LENS_API_ACCESS_TOKEN",
+  },
+  body: JSON.stringify({
+    query: signQuery,
+    variables: signVariables,
+  }),
+};
+
+fetch("https://api-v2.lens.dev", signOptions)
+  .then((response) => response.json())
+  .then((data) => console.log(JSON.stringify(data, null, 2)))
+  .catch((error) => console.error("Error:", error));
+```
+
+</details>
+
+If signless is not enabled for a profile then a frame request must be manually signed by the profile owner or a delegated manager. An application can either choose to disable frame interactions if this is the case, or generate and request that a user sign each frame using `signTypedData` wallet method. The following API endpoint can be used to generate typed to sign based on the frame request.
+
+<details>
+<summary>Create Typed Data</summary>
+
+NodeJs script using Lens API to generate typed data to sign for frame request.
+
+```
+const createTypedDataQuery = `
+  query CreateFrameTypedData($request: FrameEIP712Request!) {
+    result: createFrameTypedData(request: $request) {
+        types {
+            FrameData {
+              name
+              type
+            }
+        }
+        domain {
+            name
+            chainId
+            version
+            verifyingContract
+        }
+        value {
+            specVersion
+            url
+            buttonIndex
+            profileId
+            pubId
+            inputText
+            state
+            actionResponse
+            deadline
+        }
+    }
+  }
+`;
+
+// populated based on frame request
+const createTypedDataVariables = {
+  request: {
+    actionResponse:
+      "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    buttonIndex: 1,
+    deadline: Math.floor(Date.now() / 1000) + 3600,
+    inputText: "Some input text",
+    profileId: "0x2a6b",
+    pubId: "0x2a6b-0x27-DA-0587635a",
+    specVersion: "1.0.0",
+    state: "Some state",
+    url: "https://example.com",
+  },
+};
+
+const createTypedDataOptions = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    query: createTypedDataQuery,
+    variables: createTypedDataVariables,
+  }),
+};
+
+fetch("https://api-v2.lens.dev", createTypedDataOptions)
+  .then((response) => response.json())
+  .then((data) => console.log(JSON.stringify(data, null, 2)))
+  .catch((error) => console.error("Error:", error));
+
+```
+
+</details>
+
+</details>
+
 ### Transaction / Open Action
 
-Applications should perform validation to ensure that users are not exposed to harmful actions.
+Applications should perform validation to ensure that users are not exposed to harmful actions, and display a detailed prompts (and potentially simulation) to inform users of the action being taken.
 
-The recommended form of validation for Lens Applications is only allowing transactions that match an embedded open action. An open action is a smart contract module embedded in a Lens publication. When a Lens application receives a transaction response, the app can check whether the destination address matches one of the open action modules attached to the publication. This is the recommended form of validating transactions because it is able to check the intent of the user creating the publication, and also allows applications to maintain a list of recognized open action contract addresses that are enabled to be embedded.
+The recommended form of validation for Lens Applications is only allowing transactions that interact with Lens Protocol contracts, and if the action is a custom module such as an open action: verifying that the transaction originated from [within a Lens publication](#publications-as-frames--lens-protocol-actions), and the transaction data matches an open action address embedded in the publication.
+
+An open action is a smart contract module embedded in a Lens publication. When a Lens application receives a transaction response, the app can check whether the destination address (and potentially parameters from initialize calldata as well) matches one of the open action modules attached to the publication. This is the recommended form of validating transactions because it is able to verify the intent of the user creating the publication, and also allows applications to maintain a list of recognized open action contract addresses that are able to be embedded.
 
 Application can also validate using an allowlist of URLs for the transaction request, or a combination of open action and URL validation.
 
-# Lens Publications as Frames / Open Actions
+# Publications as Frames / Lens Protocol Actions
 
-The LIP (Lens Improvement Proposal) to introduce Lens Frames also proposes to add a publication metadata field: `preferredFrame`. The field enables Lens publication to appear in a feed, and automatically have the modules (reference modules and open actions) it contains rendered as Frame within Lens application feeds.
+The LIP (Lens Improvement Proposal) to introduce Lens Frames also proposes to add a publication metadata field: `preferredFrame`. The field enables Lens publication to appear in a feed, and automatically have the modules it contains (reference modules and open actions) rendered as transaction frames within a Lens application feed.
 
-This metadata field enables application developers to build a new open action, or a frontend for an existing action, and have it automatically and directly embedded within other Lens application feeds.
+The `preferredFrame` metadata field enables application developers to build a new open action, or a frontend for an existing action, and have it automatically embedded when a publication with the module appears in a Lens application feed.
 
-As a hypothetical example, assume a developer creates a new NFT minting open action and builds a custom transaction frame for their action at https://mynftaction.xyz. If a publication contains the NFT open action and the metadata `preferredFrame: https://mynftaction.xyz`, this publication can appear in another Lens app feed and the app automatically embeds the frame url: https://mynftaction.xyz/0x2a6b-0x16. This allows the open action developer to expose their open action through other Lens apps, and Lens apps to verify the safety of the action being taken by checking the open action contract address contained in the publication.
-
-More details on application integration of open actions [here](#transaction--open-action). Link formatting is the example above is an area for #future-developments.
+The Lens API and SDK infrastructure provide methods to sponsor transactions of core protocol actions and modules that are [verified](https://github.com/lens-protocol/verified-modules). Lens applications can use this infrastructure to allow transaction frames to be executed as gasless or signless interactions. For now, the process of decoding transactions parameters and encoding them into methods for gasless/signless transactions within Lens infrastructure would need to be done manually using ABI returned with transaction. In the future, they may be helper methods to more easily convert a transaction frame response to a sponsored equivalent.
 
 # Changelog
 
