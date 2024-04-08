@@ -20,7 +20,7 @@ Frames are an extension of the [OpenGraph protocol](https://ogp.me/) that enable
 A frame is a session between a frontend and frame server. The frame server exposes visual elements and actions that are able to be interacted through a frontend that embeds the frame. Frames can represent a wide variety of applications including informational guides, games, Web3 transactions, image galleries, e-commerce, live data, and much more.
 
 <p align="center">
-  <img src="FrameSession.png" width="100%" />
+  <img src="framesession.png" width="100%" />
 </p>
 
 A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of a user. [Open Frames](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables visual elements of frames to be shared between protocols.
