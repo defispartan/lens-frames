@@ -182,13 +182,14 @@ When a user clicks a button on a frame, the frame receives a POST request with t
 {
   clientProtocol: "lens",               // string, authentication protocol that frame server will verify
   untrustedData: {
+    specVersion: "1.0.0"                // string, Lens frame spec version that frame server is verifying typed data against
     profileId: "0x123",                 // string, Lens profile ID performing the action
     pubId: "0x123-0x1",                 // string, Lens publication ID being interacted with, poster profile ID + publication index
     url: "https://example.com",         // string, the URL of the Frame that was clicked. May be different from the URL that the data was posted to.
     unixTimestamp: 123456789,           // number, Unix timestamp in milliseconds
     buttonIndex: 1,                     // number, the button that was clicked
     inputText?: "Hello, World!",        // string, optional, input text for the Frame's text input, if present. Undefined if no text input field is present
-    deadling?: 123456789,               // number, optional, unix timestamp of signature expiration
+    deadline?: 123456789,               // number, optional, unix timestamp of signature expiration
     state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
     actionResponse?: "0x"               // string, optional, transaction hash, if executed through tx button
   },
