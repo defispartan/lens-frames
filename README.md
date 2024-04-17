@@ -176,7 +176,7 @@ The client then sends a transaction request to the user's connected wallet, or u
 
 ## Frame Requests
 
-When a user clicks a button on a frame, the frame receives a POST request with the payload format below. The payload contains `untrustedData`, containing details of the action taken, and `trustedData`, an EIP-712 signed message from a profile owner or delegated executor used to verify the authenticity of `untrustedData`.
+When a user clicks a button on a frame, the frame receives a POST request with the payload format below. The payload contains `untrustedData`, containing details of the action taken, and `trustedData`, an EIP-712 signed message from a profile owner or delegated executor used to verify the authenticity that a frame request originated from a specific Lens profileId.
 
 ```
 {
@@ -192,12 +192,12 @@ When a user clicks a button on a frame, the frame receives a POST request with t
     deadline?: 123456789,               // number, optional, unix timestamp of signature expiration
     state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
     actionResponse?: "0x"               // string, optional, transaction hash, if executed through tx button
+    identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
+    signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
+    signer?: "",                        // string, optional, address used to sign type data from trustedData.messageBytes
   },
   trustedData: {
     messageBytes: "",                   // string, EIP-712 signed message of request payload or blank string if action is not authenticated
-    identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
-    signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
-    signer?: "",                        // string, optional, address used to sign type data from messageBytes
   }
 }
 ```
@@ -292,7 +292,7 @@ lensClient.frames
   .then((response) => {
     lensClient.frames
       .verifyFrameSignature({
-        identityToken: req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+        identityToken: req.body.untrustedData.identityToken, // Frame server request, untrustedData.identityToken
         signature: req.body.trustedData.messageBytes, // Frame server request, trustedData.messageBytes,
         signedTypedData: response,
       })
@@ -372,7 +372,7 @@ fetch("https://api-v2.lens.dev", createTypedDataOptions)
     const verifyVariables = {
       request: {
         identityToken:
-         req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+         req.body.untrustedData.identityToken, // Frame server request, untrustedData.identityToken
         signature:
           req.bodt.trustedData.messageBytes, // Frame server request, trustedData.messageBytes
         signedTypedData: typedData.data.result,
