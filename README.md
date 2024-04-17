@@ -54,17 +54,18 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 
 <meta property="of:accepts:lens" content="2024-03-01" />
 
-| Property          | Description                                                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `of:version`      | The version label of the Open Frames spec. Currently the only supported version is `1.0.0`                                       |
-| `of:accepts:lens` | The minimum client protocol version accepted for the given protocol identifier. Currently the only supported version is `1.0.0`. |
-| `of:image`        | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                                                 |
-| `og:image`        | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames.                         |
+| Property     | Description                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------- |
+| `of:version` | The version label of the Open Frames spec. Currently the only supported version is `1.0.0`               |
+| `of:image`   | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                         |
+| `og:image`   | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames. |
 
 ### Optional properties
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. Currently the only supported version is `1.0.0`. Only required if `of:authenticated` is specified as `true` or `optional`                                                                              |
+| `of:authenticated`        | String value specifying whether frame server is requesting an authenticated response. Allowed values are `true`, `false`, or `optional`. Default: `true` if `of:accepts:lens` is present, `false` otherwise                                                                            |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
 | `of:button:$idx:target`   | The target of the action. For `post` , `post_redirect`, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
@@ -74,7 +75,6 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 | `of:image:aspect_ratio`   | The aspect ratio of the image specified in the `of:image` field. Allowed values are `1.91:1` and `1:1`. Default: `1.91:1`                                                                                                                                                              |
 | `of:image:alt`            | Alt text associated with the image for accessibility                                                                                                                                                                                                                                   |
 | `of:state`                | A state serialized to a string (for example via JSON.stringify()). Maximum 4096 bytes. Will be ignored if included on the initial frame                                                                                                                                                |
-| `of:authenticated`        | Boolean value specifying whether Frame server is requesting an authenticated response. Allowed values are `true` or `false`. Default: `true`                                                                                                                                           |
 
 ## Images
 
