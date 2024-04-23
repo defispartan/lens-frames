@@ -273,7 +273,7 @@ The following sections detail how frame servers can utilize various methods to a
 NodeJS script to create and verify typed data from Lens Client SDK based on `untrustedData` and `trustedData` inputs from frame request. Install library with preferred package manager:
 
 ```
-yarn install @lens-protocol/client@alpha
+yarn install @lens-protocol/client@2.0.0
 ```
 
 ```
