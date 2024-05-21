@@ -54,17 +54,18 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 
 <meta property="of:accepts:lens" content="2024-03-01" />
 
-| Property          | Description                                                                                                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `of:version`      | The version label of the Open Frames spec. Currently the only supported version is `1.0.0`                                       |
-| `of:accepts:lens` | The minimum client protocol version accepted for the given protocol identifier. Currently the only supported version is `1.0.0`. |
-| `of:image`        | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                                                 |
-| `og:image`        | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames.                         |
+| Property     | Description                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------- |
+| `of:version` | The version label of the Open Frames spec. Currently the only supported version is `1.0.0`               |
+| `of:image`   | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                         |
+| `og:image`   | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames. |
 
 ### Optional properties
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. Currently the only supported version is `1.0.0`. Only required if `of:authenticated` is specified as `true` or `optional`                                                                              |
+| `of:authenticated`        | String value specifying whether frame server is requesting an authenticated response. Allowed values are `true`, `false`, or `optional`. Default: `true` if `of:accepts:lens` is present, `false` otherwise                                                                            |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
 | `of:button:$idx:target`   | The target of the action. For `post` , `post_redirect`, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
@@ -74,7 +75,6 @@ In compliance with the Open Frames standard, use a meta tag in your frame's HTML
 | `of:image:aspect_ratio`   | The aspect ratio of the image specified in the `of:image` field. Allowed values are `1.91:1` and `1:1`. Default: `1.91:1`                                                                                                                                                              |
 | `of:image:alt`            | Alt text associated with the image for accessibility                                                                                                                                                                                                                                   |
 | `of:state`                | A state serialized to a string (for example via JSON.stringify()). Maximum 4096 bytes. Will be ignored if included on the initial frame                                                                                                                                                |
-| `of:authenticated`        | Boolean value specifying whether Frame server is requesting an authenticated response. Allowed values are `true` or `false`. Default: `true`                                                                                                                                           |
 
 ## Images
 
@@ -176,7 +176,7 @@ The client then sends a transaction request to the user's connected wallet, or u
 
 ## Frame Requests
 
-When a user clicks a button on a frame, the frame receives a POST request with the payload format below. The payload contains `untrustedData`, containing details of the action taken, and `trustedData`, an EIP-712 signed message from a profile owner or delegated executor used to verify the authenticity of `untrustedData`.
+When a user clicks a button on a frame, the frame receives a POST request with the payload format below. The payload contains `untrustedData`, containing details of the action taken, and `trustedData`, an EIP-712 signed message from a profile owner or delegated executor used to verify the authenticity that a frame request originated from a specific Lens profileId.
 
 ```
 {
@@ -192,12 +192,12 @@ When a user clicks a button on a frame, the frame receives a POST request with t
     deadline?: 123456789,               // number, optional, unix timestamp of signature expiration
     state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
     actionResponse?: "0x"               // string, optional, transaction hash, if executed through tx button
+    identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
+    signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
+    signer?: "",                        // string, optional, address used to sign type data from trustedData.messageBytes
   },
   trustedData: {
     messageBytes: "",                   // string, EIP-712 signed message of request payload or blank string if action is not authenticated
-    identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
-    signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
-    signer?: "",                        // string, optional, address used to sign type data from messageBytes
   }
 }
 ```
@@ -273,7 +273,7 @@ The following sections detail how frame servers can utilize various methods to a
 NodeJS script to create and verify typed data from Lens Client SDK based on `untrustedData` and `trustedData` inputs from frame request. Install library with preferred package manager:
 
 ```
-yarn install @lens-protocol/client@alpha
+yarn install @lens-protocol/client@2.0.0
 ```
 
 ```
@@ -292,7 +292,7 @@ lensClient.frames
   .then((response) => {
     lensClient.frames
       .verifyFrameSignature({
-        identityToken: req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+        identityToken: req.body.untrustedData.identityToken, // Frame server request, untrustedData.identityToken
         signature: req.body.trustedData.messageBytes, // Frame server request, trustedData.messageBytes,
         signedTypedData: response,
       })
@@ -372,7 +372,7 @@ fetch("https://api-v2.lens.dev", createTypedDataOptions)
     const verifyVariables = {
       request: {
         identityToken:
-         req.body.trustedData.identityToken, // Frame server request, trustedData.identityToken
+         req.body.untrustedData.identityToken, // Frame server request, untrustedData.identityToken
         signature:
           req.bodt.trustedData.messageBytes, // Frame server request, trustedData.messageBytes
         signedTypedData: typedData.data.result,
