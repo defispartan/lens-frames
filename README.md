@@ -1,6 +1,7 @@
 # Lens Protocol Frames
 
 - [Overview](#overview)
+- [FAQ](#FAQ)
 - [Lens Frame Specification](#specification)
   - [Tags](#tags)
   - [Images](#images)
@@ -35,6 +36,56 @@ The highlights of the Lens Frames specification are:
 - Publication metadata field to enable Lens publications as frames
 - Interactions with open action modules
 - Describe how open actions can be executed through transaction frames, and enhance the verifiability for apps
+
+# FAQ
+
+## What is a Lens Frame?
+
+Lens Frames are an extension of the Open Frames standard that enables Lens social context (profile, publications) to be referenced and authenticated within a Frame session.
+
+A Lens Frame is an application that returns HTML `<meta>` tags specifying the app requirements, buttons, text input, and actions of the Frame, and can update state based on button interactions.
+
+## What tags are required for a Lens Frame?
+
+Lens Frames are expected to have the following properties in order to be rendered by Open Frame applications:
+
+- 1. `of:version` = `1.0.0`
+- 2. `of:image` is defined
+- 3. `of:accepts:lens` = `1.0.0` OR `of:authenticated` = `false` OR `optional`
+  - Value for (3) is set based on whether Lens context is required, optional, or not requested by the Frame
+
+## How do I build a new Lens Frame?
+
+Developers can checkout the [frames.js Quickstart Guide](https://framesjs.org/guides/create-frame), then add Lens as an [accepted clientProtocol](https://github.com/defispartan/demo-multi-frame/blob/main/app/frames/frames.ts).
+
+Or check out demo Frames:
+
+- https://github.com/defispartan/demo-multi-frame - Authenticated frame compatible with FC, XMTP, and Lens (frames.js)
+- https://github.com/defispartan/gm-open-frame/ - Demo of text input and unauthenticated Frame (onchainkit)
+- https://github.com/defispartan/tx-boilerplate-frame - Toggling between networks to send 0 value transaction (onchainkit)
+
+## How do I convert an existing frame to be compatible with Lens applications?
+
+Frames can be modified to be compatible with Lens applications with the following steps:
+
+- frames.js: Add Lens as [clientProtcol within createFrames](https://github.com/defispartan/demo-multi-frame/blob/main/app/frames/frames.ts)
+- onchainkit: Add [Lens Frame required tags](#what-is-a-lens-frame) to [Metadata](https://github.com/defispartan/gm-open-frame/blob/main/src/app/page.tsx)
+- Frog: [XMTP Middleware](https://frog.fm/concepts/middleware#xmtp-frames-middleware) can be used a template
+- Other: Add `<meta>` tags to `<head>` of HTML page matching [Lens requirements](#what-tags-are-required-for-a-lens-frame)
+
+## Where are Lens Frames suported?
+
+| Interface                            | Open Frames | Lens Frames | Transaction Frames |
+| ------------------------------------ | ----------- | ----------- | ------------------ |
+| https://buttrfly.app                 | X           | X           |                    |
+| https://converse.xyz                 | X           |             |                    |
+| https://framesjs-debugger.vercel.app | X           | X           | X                  |
+
+## What is unique about Lens Frames?
+
+Lens profile owners and managers are Ethereum addresses. The Ethereum signer of a Lens session can be used to interact with transaction Frames, providing a link between the social and onchain interactions and unlocking new opportunities to modify an onchain action based on the social context.
+
+Lens Publications can contain open actions, smart contract contract addresses and calldata that define an instance of any onchain action. By specifying an open action module (such as paid collect, swap, or NFT minting), an app can render a Frame from a preset URL based on the action or from [publication metadata](#publications-as-frames--lens-protocol-actions). By creating frames from open actions, apps can filter and curate transaction Frames based on contract addresses rather than URLs, and verify that transactions mathes the intent of the original poster.
 
 # Specification
 
