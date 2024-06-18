@@ -38,9 +38,9 @@ The highlights of the Lens Frames specification are:
 
 # Specification
 
-A frame is a set of <meta> tags returned within the <head> of an HTML page.
+A frame is a set of `<meta>` tags returned within the `<head>` of an HTML page.
 
-If a page contains all required frame properties, apps will render the page as a frame. The frame <meta> tags extend the OpenGraph protocol.
+If a page contains all required frame properties, apps will render the page as a frame. The frame `<meta>` tags extend the OpenGraph protocol.
 
 A frame app begins with an initial frame which is cached by apps and shown to users. A frame must have an image. It may have buttons, which when clicked load other frames or redirect the user to external websites.
 
@@ -52,7 +52,7 @@ A frame property is a meta tag with a property and a content value.
 
 In compliance with the Open Frames standard, use a meta tag in your frame's HTML to declare the client protocols your frame supports.
 
-<meta property="of:accepts:lens" content="2024-03-01" />
+`<meta property="of:accepts:lens" content="" />`
 
 | Property     | Description                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------------- |
