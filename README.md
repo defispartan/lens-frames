@@ -23,9 +23,9 @@ A frame is a session between a frontend and frame server. The frame server expos
   <img src="framesession.png" width="100%" />
 </p>
 
-A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of a user. [Open Frames](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables visual elements of frames to be shared between protocols.
+A frame session is also able to incorporate authentication protocols, allowing the frame server to verify the inputs and identity of an interaction. [Open Frames](https://github.com/open-frames/standard/tree/main) is a set of standard frame tags that enables elements of frames to be shared between protocols.
 
-The Lens Frames specification is an implementation of Open Frames that defines a standard to create interactive applications that integrate Lens Protocol authentication and functionality.
+Lens Frames are an extension of the Open Frames standard that enables Lens social context (profile, publications) to be referenced and authenticated.
 
 The highlights of the Lens Frames specification are:
 
