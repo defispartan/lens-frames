@@ -52,7 +52,7 @@ A frame property is a meta tag with a property and a content value.
 
 In compliance with the Open Frames standard, use a meta tag in your frame's HTML to declare the client protocols your frame supports.
 
-`<meta property="of:accepts:lens" content="" />`
+`<meta property="of:accepts:lens" content="1.0.0" />`
 
 | Property     | Description                                                                                              |
 | ------------ | -------------------------------------------------------------------------------------------------------- |
