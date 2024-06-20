@@ -16,7 +16,7 @@ The client should render a frame if:
 - Frame contains `of:image` tag
 - Frame matches current authentication status of client / user:
   - Frame can be rendered regardless of login status if tag `of:accepts:anonymous` is present
-  - Frame does not contain `of:accepts:anonymous` AND `of:accepts:lens` = `1.0.0`, then frame can rendered if user has a Lens profile connected to the client app
+  - Frame does not contain `of:accepts:anonymous` AND `of:accepts:lens` = `1.0.0`, then frame can be rendered if user has a Lens profile connected to the client app
 
 If a client is unable to render a frame it should fallback to displaying `og:image`.
 
