@@ -336,16 +336,35 @@ const lensClientConfig = {
 
 const lensClient = new LensClient(lensClientConfig);
 
-lensClient.frames
-  .createFrameTypedData({
-    ...req.body.untrustedData // Frame server request, untrustedData
-  })
-  .then((response) => {
+  const {
+    url,
+    inputText,
+    state,
+    buttonIndex,
+    actionResponse,
+    profileId,
+    pubId,
+    specVersion,
+    deadline,
+    identityToken,
+  } = req.body.untrustedData;
+
+  lensClient.frames.createFrameTypedData({
+    url,
+    inputText,
+    state,
+    buttonIndex,
+    actionResponse,
+    profileId,
+    pubId,
+    specVersion,
+    deadline,
+  }).then((typedData) => {
     lensClient.frames
       .verifyFrameSignature({
-        identityToken: req.body.untrustedData.identityToken, // Frame server request, untrustedData.identityToken
-        signature: req.body.trustedData.messageBytes, // Frame server request, trustedData.messageBytes,
-        signedTypedData: response,
+        identityToken,
+        signature: req.body.trustedData.messageBytes,
+        signedTypedData: typedData,
       })
       .then((verification) => {
         if(verification === FrameVerifySignatureResult.Verified){
