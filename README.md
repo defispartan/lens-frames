@@ -58,11 +58,12 @@ Lens Frames are expected to have the following tags in order to be rendered by O
 
 Developers can checkout the [frames.js Quickstart Guide](https://framesjs.org/guides/create-frame), then add Lens as an [accepted clientProtocol](https://github.com/defispartan/demo-multi-frame/blob/main/app/frames/frames.ts).
 
-Or check out demo Frames:
+Examples:
 
-- https://github.com/defispartan/demo-multi-frame - Authenticated frame compatible with FC, XMTP, and Lens (frames.js)
-- https://github.com/defispartan/gm-open-frame/ - Demo of text input and unauthenticated Frame (onchainkit)
-- https://github.com/defispartan/tx-boilerplate-frame - Toggling between networks to send 0 value transaction (onchainkit)
+- [Lens Profile Stats](https://lens-profile-stats-frame.vercel.app/) [Source Code](https://github.com/defispartan/lens-profile-stats-frame)
+- [EIP Tools](https://eip.tools/) [Source Code](https://github.com/apoorvlathey/eip-tools)
+- [Zero Value Transaction Demo](https://tx-boilerplate-frame-blue.vercel.app/) [Source Code](https://github.com/defispartan/tx-boilerplate-frame)
+- [Multi-Protocol Demo](https://demo-multi-frame.vercel.app) [Source Code](https://github.com/defispartan/demo-multi-frame)
 
 ## How do I convert an existing frame to be compatible with Lens applications?
 
@@ -77,9 +78,10 @@ Frames can be modified to be compatible with Lens applications with the followin
 
 | Interface                            | Open Frames | Lens Frames | Transaction Frames |
 | ------------------------------------ | ----------- | ----------- | ------------------ |
+| https://hey,xyz                      | X           | X           | X                  |
 | https://buttrfly.app                 | X           | X           |                    |
-| https://converse.xyz                 | X           |             |                    |
 | https://framesjs-debugger.vercel.app | X           | X           | X                  |
+| https://converse.xyz                 | X           |             |                    |
 
 ## What is unique about Lens Frames?
 
