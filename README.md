@@ -47,12 +47,12 @@ A Lens Frame is an application that returns HTML `<meta>` tags specifying the ap
 
 ## What tags are required for a Lens Frame?
 
-Lens Frames are expected to have the following properties in order to be rendered by Open Frame applications:
+Lens Frames are expected to have the following tags in order to be rendered by Open Frame applications:
 
-- 1. `of:version` = `1.0.0`
+- 1. `of:version`
 - 2. `of:image` is defined
-- 3. `of:accepts:lens` = `1.0.0` OR `of:authenticated` = `false` OR `optional`
-  - Value for (3) is set based on whether Lens context is required, optional, or not requested by the Frame
+- 3. `of:accepts:lens` OR `of:accepts:anonymous`
+  - Value for (3) is set based on whether Lens authentication is required by the Frame or not
 
 ## How do I build a new Lens Frame?
 
@@ -101,22 +101,22 @@ A frame property is a meta tag with a property and a content value.
 
 ### Required Properties
 
-In compliance with the Open Frames standard, use a meta tag in your frame's HTML to declare the client protocols your frame supports.
+In compliance with the Open Frames standard, a Frame built to be rendered on Lens applications must contain the following tags:
 
-`<meta property="of:accepts:lens" content="1.0.0" />`
-
-| Property     | Description                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
-| `of:version` | The version label of the Open Frames spec. Currently the only supported version is `1.0.0`               |
-| `of:image`   | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                         |
-| `og:image`   | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames. |
+| Property                                    | Description                                                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `of:version`                                | The version label of the Open Frames spec. Currently the only supported version is `vNext`               |
+| `of:image`                                  | An image which should have an aspect ratio of `1.91:1` or `1:1`.                                         |
+| `og:image`                                  | An image which should have an aspect ratio of `1.91:1`. Fallback for clients that do not support frames. |
+| `of:accepts:lens` OR `of:accepts:anonymous` | Specifies whether Frame requires Lens authentication or does not require authentication.                 |
 
 ### Optional properties
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. Currently the only supported version is `1.0.0`. Only required if `of:authenticated` is specified as `true` or `optional`                                                                              |
-| `of:authenticated`        | String value specifying whether frame server is requesting an authenticated response. Allowed values are `true`, `false`, or `optional`. Default: `true` if `of:accepts:lens` is present, `false` otherwise                                                                            |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. Currently the only supported version is `1.0.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
+| `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `true`                                                                                                                                                  |
+| `of:context:lens`         | Boolean value specifying whether requests sent to frame server must include context (untrustedData) corresponding to the client protocol. Default = `true`                                                                                                                             |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
 | `of:button:$idx:target`   | The target of the action. For `post` , `post_redirect`, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
