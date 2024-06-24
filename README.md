@@ -77,9 +77,10 @@ Frames can be modified to be compatible with Lens applications with the followin
 
 | Interface                            | Open Frames | Lens Frames | Transaction Frames |
 | ------------------------------------ | ----------- | ----------- | ------------------ |
+| https://hey,xyz                      | X           | X           | X                  |
 | https://buttrfly.app                 | X           | X           |                    |
-| https://converse.xyz                 | X           |             |                    |
 | https://framesjs-debugger.vercel.app | X           | X           | X                  |
+| https://converse.xyz                 | X           |             |                    |
 
 ## What is unique about Lens Frames?
 
