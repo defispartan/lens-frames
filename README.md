@@ -418,7 +418,8 @@ const createTypedDataQuery = `
   }
 `;
 
-const createTypedDataVariables = req.body.untrustedData; // Frame server request, untrustedData
+const { unixTimestamp, identityToken, ...untrustedData } = req.body.untrustedData;
+const createTypedDataVariables = { request: untrustedData };
 
 const createTypedDataOptions = {
   method: "POST",
