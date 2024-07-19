@@ -116,7 +116,7 @@ In compliance with the Open Frames standard, a Frame built to be rendered on Len
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. The latest spec version is `1.2.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. The latest spec version is `1.0.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
 | `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `1.0.0`                                                                                                                                                  |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
@@ -297,7 +297,7 @@ When a user clicks a button on a frame, the frame receives a POST request with t
 {
   clientProtocol: "lens",               // string, authentication protocol that frame server will verify
   untrustedData: {
-    specVersion: "1.2.0"                // string, Lens frame spec version that frame server is verifying typed data against
+    specVersion: "1.0.0"                // string, Lens frame spec version that frame server is verifying typed data against
     profileId: "0x123",                 // string, Lens profile ID performing the action
     pubId: "0x123-0x1",                 // string, Lens publication ID being interacted with, poster profile ID + publication index
     url: "https://example.com",         // string, the URL of the Frame that was clicked. May be different from the URL that the data was posted to.
@@ -331,7 +331,7 @@ A Lens Profile is an NFT with one owner address and any number of delegated exec
 // EIP-712 domain
 const domain = {
     name: 'Lens Frames',
-    version: '1.2.0',
+    version: '1.0.0',
     chainId: 137,
     verifyingContract": '0x0000000000000000000000000000000000000000'
 }
@@ -353,7 +353,7 @@ const types = {
 
 // Data to sign, from frameDispatcherSignature endpoint request
 const sampleData = {
-    specVersion: '1.2.0',
+    specVersion: '1.0.0',
     url: 'https://mylensframe.xyz',
     buttonIndex: 2,
     profileId: '0x2a6b',
