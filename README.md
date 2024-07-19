@@ -52,7 +52,7 @@ Lens Frames are expected to have the following tags in order to be rendered by O
 - 1. `of:version`
 - 2. `of:image` is defined
 - 3. `of:accepts:lens` OR `of:accepts:anonymous`
-  - Value for (3) is set based on whether Lens authentication is required by the Frame or not
+  - Value for (3) is set based on whether Lens authentication is required by the Frame or not. Unless a frame specifically requires authenticating the Lens Profile performing an action it is recommended to use `of:accepts:anonymous` to allow the frame to be supported across all Open Frame applications.
 
 ## How do I build a new Lens Frame?
 
