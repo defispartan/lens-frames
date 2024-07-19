@@ -76,12 +76,12 @@ Frames can be modified to be compatible with Lens applications with the followin
 
 ## Where are Lens Frames suported?
 
-| Interface                            | Open Frames | Lens Frames | Transaction Frames |
-| ------------------------------------ | ----------- | ----------- | ------------------ |
-| https://hey,xyz                      | X           | X           | X                  |
-| https://buttrfly.app                 | X           | X           |                    |
-| https://framesjs-debugger.vercel.app | X           | X           | X                  |
-| https://converse.xyz                 | X           |             |                    |
+| Interface                            | Open Frames | Lens Frames | Transaction Frames | Signature Frames |
+| ------------------------------------ | ----------- | ----------- | ------------------ | ---------------- |
+| https://hey,xyz                      | X           | X           | X                  |                  |
+| https://buttrfly.app                 | X           | X           |                    |                  |
+| https://framesjs-debugger.vercel.app | X           | X           | X                  |                  |
+| https://converse.xyz                 | X           |             |                    |                  |
 
 ## What is unique about Lens Frames?
 
@@ -116,8 +116,8 @@ In compliance with the Open Frames standard, a Frame built to be rendered on Len
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. The latest spec version is `1.0.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
-| `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `1.0.0`                                                                                                                                                  |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. The latest spec version is `1.0.0`. Only required if `of:accepts:anonymous` is not specified                                                                                                           |
+| `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `1.0.0`                                                                                                                                                 |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
 | `of:button:$idx:target`   | The target of the action. For `post` , `post_redirect`, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
@@ -194,15 +194,15 @@ A wallet action response must be one of the following:
 - `chainId`: A CAIP-2 chain ID to identify the transaction network (e.g., Ethereum mainnet).
 - `method`: Must be `"eth_sendTransaction"`.
 - `params`:
-    - `abi`: JSON ABI which MUST include encoded function type and SHOULD include potential error types. Can be empty.
-    - `to`: Transaction recipient.
-    - `value`: Value to send with the transaction in wei (optional).
-    - `data`: Transaction calldata (optional).
+  - `abi`: JSON ABI which MUST include encoded function type and SHOULD include potential error types. Can be empty.
+  - `to`: Transaction recipient.
+  - `value`: Value to send with the transaction in wei (optional).
+  - `data`: Transaction calldata (optional).
 
 ```tsx
 type EthSendTransactionAction = {
   chainId: string;
-  method: 'eth_sendTransaction';
+  method: "eth_sendTransaction";
   params: {
     abi: Abi | [];
     to: string;
@@ -234,15 +234,15 @@ See [EIP-712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md).
 - `chainId`: A CAIP-2 chain ID to identify the transaction network (e.g., Ethereum mainnet).
 - `method`: Must be `"eth_signTypedData_v4"`.
 - `params`:
-    - `domain`: The typed domain.
-    - `types`: The type definitions for the typed data.
-    - `primaryType`: The primary type to extract from types and use in value.
-    - `message`: Typed message.
+  - `domain`: The typed domain.
+  - `types`: The type definitions for the typed data.
+  - `primaryType`: The primary type to extract from types and use in value.
+  - `message`: Typed message.
 
 ```tsx
 type EthSignTypedDataV4Action = {
   chainId: string;
-  method: 'eth_signTypedData_v4';
+  method: "eth_signTypedData_v4";
   params: {
     domain: {
       name?: string;
@@ -277,9 +277,7 @@ Example:
         { "name": "chainId", "type": "uint256" },
         { "name": "verifyingContract", "type": "address" }
       ],
-      "Message": [
-        { "name": "message", "type": "string" }
-      ]
+      "Message": [{ "name": "message", "type": "string" }]
     },
     "primaryType": "Message",
     "message": {
