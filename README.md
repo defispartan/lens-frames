@@ -116,9 +116,8 @@ In compliance with the Open Frames standard, a Frame built to be rendered on Len
 
 | Property                  | Description                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. Currently the only supported version is `1.0.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
-| `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `true`                                                                                                                                                  |
-| `of:context:lens`         | Boolean value specifying whether requests sent to frame server must include context (untrustedData) corresponding to the client protocol. Default = `true`                                                                                                                             |
+| `of:accepts:lens`         | The minimum spec version for authenticated requests using Lens Frames standard. The latest spec version is `1.2.0`. Only required if `of:accepts:anonymous` is not specified                                                                                              |
+| `of:accepts:anonymous`    | If present, specifies that frame server does not require an authenticated response, tag content not required but can be set to `1.0.0`                                                                                                                                                  |
 | `of:button:$idx`          | 256 byte string containing the user-visible label for button at index `$idx`. Buttons are 1-indexed. Maximum 4 buttons per Frame. `$idx` values must be rendered in an unbroken sequence.                                                                                              |
 | `of:button:$idx:action`   | Valid options are `post`, `post_redirect`, `mint`, `link`, and `tx`. Default: `post`                                                                                                                                                                                                   |
 | `of:button:$idx:target`   | The target of the action. For `post` , `post_redirect`, and link action types the target is expected to be a URL starting with `http://` or `https://`. For the mint action type the target must be a [CAIP-10 URL](https://github.com/ChainAgnostic/CAIPs/blob/main/CAIPs/caip-10.md) |
@@ -180,52 +179,115 @@ The target property must be a valid [CAIP-10](https://github.com/ChainAgnostic/C
 
 ## `tx`
 
-The `tx` action allows a frame to send a transaction request to the user's connected wallet. Unlike other action types, tx actions have multiple steps.
+The `tx` action allows a frame to request the user take an action in their connected wallet. Unlike other action types, `tx` actions have multiple steps.
 
-First, the client makes a POST request to the `target` URL to fetch data about the transaction. The frame server receives a signed frame action payload in the POST body, which includes the `profileId` and optional `signer` field that can be verified using the [authentication](#authentication) steps. The frame server must respond with a `200 OK` and a JSON response describing the transaction which satisfies the following type:
+First, the client makes a POST request to the `target` URL to fetch data about the wallet action. The frame server receives a signed frame action payload in the POST body, including the address of the connected wallet in the `address` field. The frame server must respond with a `200 OK` and a JSON response describing the wallet action which satisfies one of the [wallet action response types](#wallet-action-response-types).
 
-```ts
-type TransactionTargetResponse {
+The client uses the response data to request an action in the user's wallet. If the user completes the action, the client makes a POST request to the `post_url` with a signed frame action payload that includes the transaction or signature hash in the `actionResponse` field and the address used in the `address` field. The frame server must respond with a `200 OK` and another frame. The frame server may monitor the transaction hash to determine if the transaction succeeds, reverts, or times out.
+
+### Wallet Action Response Types
+
+A wallet action response must be one of the following:
+
+**EthSendTransactionAction**
+
+- `chainId`: A CAIP-2 chain ID to identify the transaction network (e.g., Ethereum mainnet).
+- `method`: Must be `"eth_sendTransaction"`.
+- `params`:
+    - `abi`: JSON ABI which MUST include encoded function type and SHOULD include potential error types. Can be empty.
+    - `to`: Transaction recipient.
+    - `value`: Value to send with the transaction in wei (optional).
+    - `data`: Transaction calldata (optional).
+
+```tsx
+type EthSendTransactionAction = {
   chainId: string;
-  method: "eth_sendTransaction";
-  params: EthSendTransactionParams;
-}
-```
-
-### Ethereum Params
-
-If the method is `eth_sendTransaction` and the chain is an Ethereum EVM chain, the param must be of type `EthSendTransactionParams`:
-
-- `abi`: JSON ABI which **MUST** include encoded function type and **SHOULD** include potential error types. Can be empty.
-- `to`: transaction recipient
-- `value`: value to send with the transaction in wei (optional)
-- `data`: transaction calldata (optional)
-
-```ts
-type EthSendTransactionParams {
-  abi: Abi | [];
-  to: `0x${string}`;
-  value?: string;
-  data?: `0x${string}`;
-}
+  method: 'eth_sendTransaction';
+  params: {
+    abi: Abi | [];
+    to: string;
+    value?: string;
+    data?: string;
+  };
+};
 ```
 
 Example:
 
 ```json
 {
-  "chainId": "eip155:1",                                // The chain ID of the transaction
-  "method": "eth_sendTransaction",                      // The method to call on the wallet
+  "chainId": "eip155:1",
+  "method": "eth_sendTransaction",
   "params": {
-    "abi": [...],                                       // JSON ABI of the function selector and any errors
-    "to": "0x0000000000000000000000000000000000000001", // The recipient of the transaction
-    "data": "0x00",                                     // Transaction calldata
-    "value": "123456789",                               // Value to send with the transaction
-  },
+    "abi": [...],
+    "to": "0x0000000000000000000000000000000000000001",
+    "data": "0x00",
+    "value": "123456789"
+  }
+}
+```
+
+**EthSignTypedDataV4Action**
+
+See [EIP-712](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-712.md).
+
+- `chainId`: A CAIP-2 chain ID to identify the transaction network (e.g., Ethereum mainnet).
+- `method`: Must be `"eth_signTypedData_v4"`.
+- `params`:
+    - `domain`: The typed domain.
+    - `types`: The type definitions for the typed data.
+    - `primaryType`: The primary type to extract from types and use in value.
+    - `message`: Typed message.
+
+```tsx
+type EthSignTypedDataV4Action = {
+  chainId: string;
+  method: 'eth_signTypedData_v4';
+  params: {
+    domain: {
+      name?: string;
+      version?: string;
+      chainId?: number;
+      verifyingContract?: string;
+    };
+    types: Record<string, unknown>;
+    primaryType: string;
+    message: Record<string, unknown>;
+  };
 };
 ```
 
-The client then sends a transaction request to the user's connected wallet, or uses the calldata to generate a signed or dispatched action for Lens protocol actions following instructions [here](#lens-publications-as-frames--open-actions). The client should then send a POST request to the `post_url` with a signed frame action payload including the transaction hash in the `actioNResponse` field to which the frame server should respond with a `200 OK` and another frame.
+Example:
+
+```json
+{
+  "chainId": "eip155:10",
+  "method": "eth_signTypedData_v4",
+  "params": {
+    "domain": {
+      "name": "Example",
+      "version": "1.0",
+      "chainId": 10,
+      "verifyingContract": "0x00000000fcCe7f938e7aE6D3c335bD6a1a7c593D"
+    },
+    "types": {
+      "EIP712Domain": [
+        { "name": "name", "type": "string" },
+        { "name": "version", "type": "string" },
+        { "name": "chainId", "type": "uint256" },
+        { "name": "verifyingContract", "type": "address" }
+      ],
+      "Message": [
+        { "name": "message", "type": "string" }
+      ]
+    },
+    "primaryType": "Message",
+    "message": {
+      "message": "Hello, world!"
+    }
+  }
+}
+```
 
 ## Frame Requests
 
@@ -235,7 +297,7 @@ When a user clicks a button on a frame, the frame receives a POST request with t
 {
   clientProtocol: "lens",               // string, authentication protocol that frame server will verify
   untrustedData: {
-    specVersion: "1.0.0"                // string, Lens frame spec version that frame server is verifying typed data against
+    specVersion: "1.2.0"                // string, Lens frame spec version that frame server is verifying typed data against
     profileId: "0x123",                 // string, Lens profile ID performing the action
     pubId: "0x123-0x1",                 // string, Lens publication ID being interacted with, poster profile ID + publication index
     url: "https://example.com",         // string, the URL of the Frame that was clicked. May be different from the URL that the data was posted to.
@@ -244,10 +306,11 @@ When a user clicks a button on a frame, the frame receives a POST request with t
     inputText?: "Hello, World!",        // string, optional, input text for the Frame's text input, if present. Undefined if no text input field is present
     deadline?: 123456789,               // number, optional, unix timestamp of signature expiration
     state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
-    actionResponse?: "0x"               // string, optional, transaction hash, if executed through tx button
+    actionResponse?: "0x"               // string, optional, transaction hash or signed typed data from wallet action
     identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
     signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
     signer?: "",                        // string, optional, address used to sign type data from trustedData.messageBytes
+    address?: "",                       // string, optional, connect wallet address, can be same or different from signer addres
   },
   trustedData: {
     messageBytes: "",                   // string, EIP-712 signed message of request payload or blank string if action is not authenticated
@@ -268,7 +331,7 @@ A Lens Profile is an NFT with one owner address and any number of delegated exec
 // EIP-712 domain
 const domain = {
     name: 'Lens Frames',
-    version: '1.0.0',
+    version: '1.2.0',
     chainId: 137,
     verifyingContract": '0x0000000000000000000000000000000000000000'
 }
@@ -290,7 +353,7 @@ const types = {
 
 // Data to sign, from frameDispatcherSignature endpoint request
 const sampleData = {
-    specVersion: '1.0.0',
+    specVersion: '1.2.0',
     url: 'https://mylensframe.xyz',
     buttonIndex: 2,
     profileId: '0x2a6b',
@@ -489,9 +552,11 @@ The Lens API and SDK infrastructure provide methods to sponsor transactions of c
 
 # Changelog
 
-| Version | Date       | Change                |
-| ------- | ---------- | --------------------- |
-| 1.0.0   | 2024-04-04 | Initial specification |
+| Version | Date       | Change                 |
+| ------- | ---------- | ---------------------- |
+| 1.0.0   | 2024-04-04 | Initial specification  |
+| 1.0.0   | 2024-06-20 | Anonymous frames       |
+| 1.0.0   | 2024-07-18 | Signature frame action |
 
 # Future Developments
 
