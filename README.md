@@ -543,15 +543,9 @@ see [App Integration Guide](./INTEGRATE.md)
 
 # Changelog
 
-| Version | Date       | Change                 |
-| ------- | ---------- | ---------------------- |
-| 1.0.0   | 2024-04-04 | Initial specification  |
-| 1.0.0   | 2024-06-20 | Anonymous frames       |
-| 1.0.0   | 2024-07-18 | Signature frame action |
-
-# Future Developments
-
-- Helper methods to expand validation of open actions to verify initialize data such as type of collect module, accepted currency, etc.
-- Extend SDK to abstract generating and parsing frame requests
-- Add resources section for libraries and examples
-- Standard link formatting for publications with `preferredFrame` metadata
+| Version | Date       | Change                                                                  |
+| ------- | ---------- | ----------------------------------------------------------------------- |
+| 1.0.0   | 2024-04-04 | Initial specification                                                   |
+| 1.0.0   | 2024-06-20 | Anonymous frames                                                        |
+| 1.0.0   | 2024-07-18 | Signature frame action                                                  |
+| 1.1.0   |            | Frames 1.1 - Transactions / Signature / Lens Actions / Metadata Updates |
