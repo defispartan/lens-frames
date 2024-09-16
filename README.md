@@ -78,11 +78,11 @@ Frames can be modified to be compatible with Lens applications with the followin
 
 | Interface                            | Open Frames | Lens Frames | Transaction Frames | Signature Frames | Anonymous Frames |
 | ------------------------------------ | ----------- | ----------- | ------------------ | ---------------- | ---------------- |
-| https://hey.xyz                      | X           | X           | X                  |                  | X                |
-| https://kaira.network                | X           | X           | X                  |                  |
-| https://buttrfly.app                 | X           | X           |                    |                  |
-| https://framesjs-debugger.vercel.app | X           | X           | X                  |                  | X                |
-| https://converse.xyz                 | X           |             |                    |                  |
+| https://hey.xyz                      | X           | X           | X                  | ~ (in progress)  | X                |
+| https://kaira.network                | X           | X           | X                  |                  | X                |
+| https://buttrfly.app                 | X           | X           | X                  |                  | X                |
+| https://framesjs-debugger.vercel.app | X           | X           | ~ (in progress)    | ~ (in progress)  | X                |
+| https://converse.xyz                 | X           |             |                    |                  |                  |
 
 ## What is unique about Lens Frames?
 
