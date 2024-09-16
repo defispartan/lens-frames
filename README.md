@@ -549,3 +549,5 @@ see [App Integration Guide](./INTEGRATE.md)
 | 1.0.0   | 2024-06-20 | Anonymous frames                                                        |
 | 1.0.0   | 2024-07-18 | Signature frame action                                                  |
 | 1.1.0   |            | Frames 1.1 - Transactions / Signature / Lens Actions / Metadata Updates |
+
+See [CHANGELOG](./CHANGELOG.md) for a history of interfaces changes

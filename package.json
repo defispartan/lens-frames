@@ -1,6 +1,6 @@
 {
   "name": "lens-frames",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "Lens Frames are an extension of the Open Frames standard that enables Lens social context (profile, publications) to be referenced and authenticated.",
   "main": "index.js",
   "scripts": {
