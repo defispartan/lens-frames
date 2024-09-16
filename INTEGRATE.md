@@ -419,3 +419,8 @@ content-type: application/json
 ```
 
 If this occurs, a client must display the `message` to a user when a frame responds with an error response and allow the user to resubmit the same frame.
+
+## Creating Publications
+
+- Render Frame preview
+- Metadata (preferredFrame, frameEmbed) w/ SDK / API typing support
