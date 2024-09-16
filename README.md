@@ -184,7 +184,7 @@ The `tx` action allows a frame to request the user take an action in their conne
 
 First, the client makes a POST request to the `target` URL to fetch data about the wallet action. The frame server receives a signed frame action payload in the POST body, including the address of the connected wallet in the `address` field. The frame server must respond with a `200 OK` and a JSON response describing the wallet action which satisfies one of the [wallet action response types](#wallet-action-response-types).
 
-The client uses the response data to request an action in the user's wallet. If the user completes the action, the client makes a POST request to the `post_url` with a signed frame action payload that includes the transaction or signature hash in the `actionResponse` field and the address used in the `address` field. The frame server must respond with a `200 OK` and another frame. The frame server may monitor the transaction hash to determine if the transaction succeeds, reverts, or times out.
+The client uses the response data to request an action in the user's wallet. If the user completes the action, the client makes a POST request to the `post_url` with a signed frame action payload that includes the transaction or signature hash in the `transactionId` field and the address used in the `address` field. The frame server must respond with a `200 OK` and another frame. The frame server may monitor the transaction hash to determine if the transaction succeeds, reverts, or times out.
 
 ### Wallet Action Response Types
 
@@ -305,7 +305,7 @@ When a user clicks a button on a frame, the frame receives a POST request with t
     inputText?: "Hello, World!",        // string, optional, input text for the Frame's text input, if present. Undefined if no text input field is present
     deadline?: 123456789,               // number, optional, unix timestamp of signature expiration
     state?: "%7B%22counter%22%3A1%7D"   // string, optional, state that was passed from the frame, passed back to the frame, serialized to a string. Max 4kB.q
-    actionResponse?: "0x"               // string, optional, transaction hash or signed typed data from wallet action
+    transactionId?: "0x"               // string, optional, transaction hash or signed typed data from wallet action
     identityToken?: "",                 // string, optional, token issued by Lens API to verify profile identity and/or perform verification with Lens API from frame server
     signerType?: "",                    // string, optional, specifies type of signer used to sign typed data from messageBytes: "owner" or "delegatedExecutor"
     signer?: "",                        // string, optional, address used to sign type data from trustedData.messageBytes
@@ -345,7 +345,7 @@ const types = {
         { name: 'pubId', type: 'string' },
         { name: 'inputText', type: 'string' },
         { name: 'state', type: 'string' },
-        { name: 'actionResponse', type: 'string' },
+        { name: 'transactionId', type: 'string' },
         { name: 'deadline', type: 'uint256' },
     ],
 };
@@ -359,7 +359,7 @@ const sampleData = {
     pubId: '0x2a6b-0x11-DA-bf2507ac',
     inputText: 'Hello, World!',
     state: '{"counter":1,"idempotency_key":"431b8b38-eb4d-455b"}',
-    actionResponse: "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
+    transactionId: "0x4a2765ce77932feacfb2b06ee63161afe34781d6e00a6997af87cbe21d6b5b91",
     deadline: 123456789,
 };
 ```
@@ -405,7 +405,7 @@ const lensClient = new LensClient(lensClientConfig);
     inputText,
     state,
     buttonIndex,
-    actionResponse,
+    transactionId,
     profileId,
     pubId,
     specVersion,
@@ -418,7 +418,7 @@ const lensClient = new LensClient(lensClientConfig);
     inputText,
     state,
     buttonIndex,
-    actionResponse,
+    transactionId,
     profileId,
     pubId,
     specVersion,
@@ -473,7 +473,7 @@ const createTypedDataQuery = `
             pubId
             inputText
             state
-            actionResponse
+            transactionId
             deadline
         }
     }
