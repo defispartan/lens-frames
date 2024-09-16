@@ -541,14 +541,6 @@ Authentication may be abstracted by utilizing a frame library that supports Lens
 
 see [App Integration Guide](./INTEGRATE.md)
 
-# Publications as Frames / Lens Protocol Actions
-
-The LIP (Lens Improvement Proposal) to introduce Lens Frames also proposes to add a publication metadata field: `preferredFrame`. The field enables Lens publication to appear in a feed, and automatically have the modules it contains (reference modules and open actions) rendered as transaction frames within a Lens application feed.
-
-The `preferredFrame` metadata field enables application developers to build a new open action, or a frontend for an existing action, and have it automatically embedded when a publication with the module appears in a Lens application feed.
-
-The Lens API and SDK infrastructure provide methods to sponsor transactions of core protocol actions and modules that are [verified](https://github.com/lens-protocol/verified-modules). Lens applications can use this infrastructure to allow transaction frames to be executed as gasless or signless interactions. For now, the process of decoding transactions parameters and encoding them into methods for gasless/signless transactions within Lens infrastructure would need to be done manually using ABI returned with transaction. In the future, they may be helper methods to more easily convert a transaction frame response to a sponsored equivalent.
-
 # Changelog
 
 | Version | Date       | Change                 |
